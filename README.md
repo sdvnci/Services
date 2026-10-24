@@ -62,8 +62,7 @@ flowchart TD
     Nginx -->|sdvnci.com| Portfolio
     Nginx -->|immich.sdvnci.com| Immich
 
-    Router --- Client
-    Router --- Nginx
+    Router --- Clientp
 
     Client --> |Monitor Services| Portainer
 
