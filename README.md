@@ -20,6 +20,7 @@ Lancache and Pi-hole share the `lancache-net` network (172.28.0.0/16). Pi-hole i
 Other DNS services such as `Unbound` may be added later but are not currently included in this setup.
 
 ```mermaid
+
 flowchart TD
 
     subgraph INTERNET["Outside Internet"]
@@ -29,11 +30,11 @@ flowchart TD
     end
 
     subgraph LAN["LAN 192.XXX.XXX.XXX/XX"]
+
         subgraph GATEWAY["Gateway"]
           MULLVAD[Mullvad VPN Client]
           Router["Router / switch, 192.168.XXX.XXX"]
         end
-        Client["LAN Client, 192.168.XXX.XXX"]
 
         subgraph PI3["Pi 3 Reverse Proxy 192.168.XXX.XXX"]
             Tunnel["cloudflared\nsdvnci.com"]
@@ -49,9 +50,9 @@ flowchart TD
         end
     end
     
-    CF <--> |"sdvnci.com Tunnel"| MULLVADEXIT
-    MULLVADEXIT <--> |Upstream DNS resolution for Unbound| Upstream
-    MULLVADEXIT <--> MULLVAD
+    CF == "sdvnci.com Tunnel" ==> Router
+    MULLVAD <==> MULLVADEXIT 
+    MULLVADEXIT <-- "Upstream DNS resolution for Unbound" --> Upstream
     
     
     MULLVAD <--> |"All Clients Subscribed except Reverse Proxy"| Router
@@ -62,9 +63,10 @@ flowchart TD
     Nginx -->|sdvnci.com| Portfolio
     Nginx -->|immich.sdvnci.com| Immich
 
-    Router --- Clientp
+    Router --- Client
 
-    Client --> |Monitor Services| Portainer
+
+    Portainer -.-> Pihole & Immich & Unbound & Portfolio
 
     Pihole -->|Resolving| Unbound
     Unbound --> |Route Forwarding Through Mullvad Tunnel| Router
