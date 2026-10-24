@@ -56,12 +56,12 @@ flowchart TD
     
     
     MULLVAD <--> |"All Clients Subscribed except Reverse Proxy"| Router
-    Router --> |"sdvnci.com Tunnel"| PI3
+    Router == sdvnci.com Tunnel ==> PI3
     Router --> |"DHCP Client DNS"| Pihole
     
     Tunnel --> Nginx
-    Nginx -->|sdvnci.com| Portfolio
-    Nginx -->|immich.sdvnci.com| Immich
+    Nginx == sdvnci.com ==> Portfolio
+    Nginx == mmich.sdvnci.com ==> Immich
 
     Portainer -.-> Pihole & Immich & Unbound & Portfolio
 
