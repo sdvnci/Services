@@ -63,9 +63,6 @@ flowchart TD
     Nginx -->|sdvnci.com| Portfolio
     Nginx -->|immich.sdvnci.com| Immich
 
-    Router --- Client
-
-
     Portainer -.-> Pihole & Immich & Unbound & Portfolio
 
     Pihole -->|Resolving| Unbound
