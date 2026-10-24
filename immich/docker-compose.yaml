@@ -4,9 +4,9 @@ services:
   immich-server:
     container_name: immich_server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-    # extends:
-    #   file: hwaccel.transcoding.yml
-    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
+    extends:
+      file: hwaccel.transcoding.yml
+      service: quicksync # Intel QuickSync via the Jasper Lake iGPU
     volumes:
       # Do not edit the next line. If you want to change the media storage location on your system, edit the value of UPLOAD_LOCATION in the .env file
       - ${UPLOAD_LOCATION}:/data
@@ -22,18 +22,17 @@ services:
     healthcheck:
       disable: false
 
+  # Intel OpenVINO acceleration on the integrated UHD Graphics.
+  # mem_limit protects the 8 GB host if model loading spikes.
   immich-machine-learning:
-    privileged: true # Add this line
-    ipc: host # Add this line
     container_name: immich_machine_learning
-    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
-    # Example tag: ${IMMICH_VERSION:-release}-cuda
-    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}-rocm
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}-openvino
 
-    # uncomment this section for hardware acceleration - see https://docs.immich.app/features/ml-hardware-acceleration
+    # see https://docs.immich.app/features/ml-hardware-acceleration
     extends:
       file: hwaccel.ml.yml
-      service: rocm # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
+      service: openvino
+    mem_limit: 3g
     volumes:
       - model-cache:/cache
     env_file:

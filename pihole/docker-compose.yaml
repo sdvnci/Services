@@ -14,4 +14,13 @@ services:
       - "./etc-pihole:/etc/pihole"
     cap_add:
       - NET_ADMIN
+    depends_on:
+      - unbound
+    restart: unless-stopped
+
+  unbound:
+    container_name: unbound
+    image: mvance/unbound:1.22.0
+    volumes:
+      - "./unbound/unbound.conf:/opt/unbound/etc/unbound/unbound.conf:ro"
     restart: unless-stopped

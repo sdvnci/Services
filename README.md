@@ -19,6 +19,58 @@ Each service with a `.env.example` file requires configuration before first run.
 Lancache and Pi-hole share the `lancache-net` network (172.28.0.0/16). Pi-hole is assigned 172.28.0.10 and serves as the upstream DNS for Lancache.
 Other DNS services such as `Unbound` may be added later but are not currently included in this setup.
 
+```mermaid
+flowchart TD
+
+    subgraph INTERNET["Outside Internet"]
+      CF["Cloudflare edge"]
+      MULLVADEXIT["Mullvad Exit Node"]
+      Upstream["Public DNS, 1.1.1.1 / 1.0.0.1"]
+    end
+
+    subgraph LAN["LAN 192.XXX.XXX.XXX/XX"]
+        subgraph GATEWAY["Gateway"]
+          MULLVAD[Mullvad VPN Client]
+          Router["Router / switch, 192.168.XXX.XXX"]
+        end
+        Client["LAN Client, 192.168.XXX.XXX"]
+
+        subgraph PI3["Pi 3 Reverse Proxy 192.168.XXX.XXX"]
+            Tunnel["cloudflared\nsdvnci.com"]
+            Nginx["nginx\n80/443"]
+        end
+
+        subgraph APP["App Host Server, 192.168.XXX.XXX"]
+            Pihole["Pi-hole\n53/8088/8443"]
+            Unbound["Unbound\n:53"]
+            Immich["Immich\n:2283"]
+            Portainer["Portainer\n:9443"]
+            Portfolio["sdvnci.com webapp\n:5000"]
+        end
+    end
+    
+    CF <--> |"sdvnci.com Tunnel"| MULLVADEXIT
+    MULLVADEXIT <--> |Upstream DNS resolution for Unbound| Upstream
+    MULLVADEXIT <--> MULLVAD
+    
+    
+    MULLVAD <--> |"All Clients Subscribed except Reverse Proxy"| Router
+    Router --> |"sdvnci.com Tunnel"| PI3
+    Router --> |"DHCP Client DNS"| Pihole
+    
+    Tunnel --> Nginx
+    Nginx -->|sdvnci.com| Portfolio
+    Nginx -->|immich.sdvnci.com| Immich
+
+    Router --- Client
+    Router --- Nginx
+
+    Client --> |Monitor Services| Portainer
+
+    Pihole -->|Resolving| Unbound
+    Unbound --> |Route Forwarding Through Mullvad Tunnel| Router
+```
+
 ## Services
 
 ### Immich
@@ -34,6 +86,8 @@ cd immich
 cp .env.example .env
 docker compose up -d
 ```
+
+> Machine learning (smart search, facial recognition, duplicate detection) uses Intel OpenVINO on the integrated GPU and is capped at 3 GB of RAM in `docker-compose.yaml`. Hardware transcoding uses Intel QuickSync through `hwaccel.transcoding.yml`. If the host runs low on memory, set `IMMICH_MACHINE_LEARNING_ENABLED=false` in `.env` and stop the `immich-machine-learning` service.
 
 <table>
   <tr>
